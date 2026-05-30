@@ -4,14 +4,63 @@ import matplotlib.pyplot as plt
 
 
 class QLearningAgent:
-    def __init__(self):
-        pass
 
-    def next_action(self, obs):
-        pass
+    # el agente neecsita conocer la tabla de Q
+    # tenemos que tener posicion, velocidad y accion
+    def __init__(self, n_pos, n_vel, n_actions):
+        """Inicializa la tabla Q con ceros."""
+        self.q = np.zeros((n_pos, n_vel, n_actions))
 
-    def train_agent(self, env, episodes=1000, epsilon=.9, gamma=.9, alpha=.99):
-        pass
+    # nos llega el estado donde estamos, me quedo con la acción de mejor utilidad, que me maximiza
+    def next_action(self, state):
+        """Retorna el índice de la acción que maximiza Q para el estado dado."""
+        action = np.argmax(self.q[state])
+        return action
+    
 
-    def test_agent(self, env, episodes=10):
-        pass
+    def _epsilon_greedy_policy(self, state, epsilon):
+        """Con probabilidad epsilon explora, con probabilidad 1-epsilon explota. Retorna el índice de la acción elegida."""
+        explore = np.random.binomial(1, epsilon)
+
+        if explore:
+            action_index = random.randint(0, self.q.shape[2] - 1) # indice random entre 0 y numero de acciones discretas - 1
+
+        else: # exploit
+            action_index = np.argmax(self.q[state])
+        
+        return action_index
+
+    def train_agent(self, env, get_state, actions, episodes=1000, epsilon=0.9, gamma=0.9, alpha=0.1):
+        """Entrena el agente usando Q-Learning durante un número de episodios.En cada paso actualiza Q.
+        Retorna la tabla Q entrenada y la lista de recompensas por episodio."""
+        rewards = []
+        for episode in range (episodes):
+            obs, _ = env.reset()
+            current_state = get_state(obs)
+            done = False
+            rewards_episode=0
+            while not done:
+                action_index = self._epsilon_greedy_policy(current_state, epsilon)
+                obs, reward, done, _, _ = env.step(np.array([actions[action_index]]))
+                next_state = get_state(obs)
+                self.q[current_state][action_index] += alpha*(reward + gamma*np.max(self.q[next_state])-self.q[current_state][action_index])
+                current_state = next_state
+                rewards_episode += reward
+            rewards.append(rewards_episode)
+        return self.q, rewards
+    
+    def test_agent(self, env, get_state, actions, episodes=10):
+        """Evalúa el agente entrenado durante un número de episodios, eligiendo siempre la acción óptima según la tabla Q (no explora).
+        Retorna la lista de recompensas por episodio."""
+        rewards = []
+        for episode in range(episodes):
+            obs, _ = env.reset()
+            done = False
+            rewards_episode = 0
+            while not done:
+                state = get_state(obs)
+                action_idx = self.next_action(state)
+                obs, reward, done, _, _ = env.step(np.array([actions[action_idx]]))
+                rewards_episode += reward
+            rewards.append(rewards_episode)
+        return rewards
