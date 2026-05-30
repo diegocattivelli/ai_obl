@@ -41,9 +41,14 @@ class QLearningAgent:
             rewards_episode=0
             while not done:
                 action_index = self._epsilon_greedy_policy(current_state, epsilon)
-                obs, reward, done, _, _ = env.step(np.array([actions[action_index]]))
+                obs, reward, terminated, truncated, _ = env.step(np.array([actions[action_index]]))
+                done = terminated or truncated
                 next_state = get_state(obs)
-                self.q[current_state][action_index] += alpha*(reward + gamma*np.max(self.q[next_state])-self.q[current_state][action_index])
+                if terminated:
+                    target = reward
+                else: # not terminated
+                    target = reward + gamma * np.max(self.q[next_state])
+                self.q[current_state][action_index] += alpha * (target - self.q[current_state][action_index])
                 current_state = next_state
                 rewards_episode += reward
             rewards.append(rewards_episode)
@@ -60,7 +65,8 @@ class QLearningAgent:
             while not done:
                 state = get_state(obs)
                 action_idx = self.next_action(state)
-                obs, reward, done, _, _ = env.step(np.array([actions[action_idx]]))
+                obs, reward, terminated, truncated, _ = env.step(np.array([actions[action_idx]]))
+                done = terminated or truncated
                 rewards_episode += reward
             rewards.append(rewards_episode)
         return rewards
