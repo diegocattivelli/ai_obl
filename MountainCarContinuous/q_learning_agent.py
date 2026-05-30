@@ -8,17 +8,20 @@ class QLearningAgent:
     # el agente neecsita conocer la tabla de Q
     # tenemos que tener posicion, velocidad y accion
     def __init__(self, n_pos, n_vel, n_actions):
+        """Inicializa la tabla Q con ceros."""
         self.q = np.zeros((n_pos, n_vel, n_actions))
 
     # nos llega el estado donde estamos, me quedo con la acción de mejor utilidad, que me maximiza
     def next_action(self, state):
+        """Retorna el índice de la acción que maximiza Q para el estado dado."""
         action = np.argmax(self.q[state])
         return action
     
 
     def _epsilon_greedy_policy(self, state, epsilon):
+        """Con probabilidad epsilon explora, con probabilidad 1-epsilon explota. Retorna el índice de la acción elegida."""
         explore = np.random.binomial(1, epsilon)
-        
+
         if explore:
             action_index = random.randint(0, self.q.shape[2] - 1) # indice random entre 0 y numero de acciones discretas - 1
 
@@ -27,10 +30,9 @@ class QLearningAgent:
         
         return action_index
 
-    #entrenar el agente, mapear lo de la diapostiva de como cargar la tabla de Q
-    # acá hacemos muchos episodios, ejecutar muchas veces nuestro agente 
-    #devuelvo la tabla Q y las recompensas.
     def train_agent(self, env, get_state, actions, episodes=1000, epsilon=0.9, gamma=0.9, alpha=0.1):
+        """Entrena el agente usando Q-Learning durante un número de episodios.En cada paso actualiza Q.
+        Retorna la tabla Q entrenada y la lista de recompensas por episodio."""
         rewards = []
         for episode in range (episodes):
             obs, _ = env.reset()
@@ -47,9 +49,9 @@ class QLearningAgent:
             rewards.append(rewards_episode)
         return self.q, rewards
     
-    #toma la accion máxima, a partir de la tabla de q va a pbtener la accion que maximiza la utilidad
-    #depsues de entrenar al agente realizar un test en el cual el agente elije la accion optima basada en la tabla q entrenada
     def test_agent(self, env, get_state, actions, episodes=10):
+        """Evalúa el agente entrenado durante un número de episodios, eligiendo siempre la acción óptima según la tabla Q (no explora).
+        Retorna la lista de recompensas por episodio."""
         rewards = []
         for episode in range(episodes):
             obs, _ = env.reset()
