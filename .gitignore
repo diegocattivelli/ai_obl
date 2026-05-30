@@ -216,3 +216,22 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Modelos entrenados
+*.pkl
+*.pickle
+*.joblib
+
+# Videos del simulador (gymnasium puede generar)
+videos/
+*.mp4
+*.avi
+*.gif
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
