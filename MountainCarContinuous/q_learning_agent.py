@@ -30,7 +30,7 @@ class QLearningAgent:
         
         return action_index
 
-    def train_agent(self, env, get_state, actions, episodes=1000, epsilon=0.9, gamma=0.9, alpha=0.1):
+    def train_agent(self, env, get_state, actions, episodes=10000, epsilon=0.9, gamma=0.999, alpha=0.1):
         """Entrena el agente usando Q-Learning durante un número de episodios.En cada paso actualiza Q.
         Retorna la tabla Q entrenada y la lista de recompensas por episodio."""
         rewards = []
