@@ -78,6 +78,10 @@ poetry run python run_experiments.py --only final_v2_pos30_velNU_3acc_epsdecay  
 poetry run python run_experiments.py --cycles 5 --train 200 --eval 20   # prueba rápida
 poetry run python make_plots.py                      # regenerar comparativas por grupo
 poetry run python run_experiments.py --resume checkpoints/<config>_ep10000.pkl --cycles 5
+
+# v2.1 — multi-semilla (banda entre semillas):
+poetry run python run_experiments.py --seeds 0,1,2               # todas, 3 semillas
+poetry run python run_experiments.py --group gamma --seeds 0,1,2 # un grupo, 3 semillas
 ```
 
 Salidas en `checkpoints/`: `<config>_ep<N>.pkl`, `<config>_metrics.csv`,
@@ -101,8 +105,9 @@ Salidas en `checkpoints/`: `<config>_ep<N>.pkl`, `<config>_metrics.csv`,
 ## Roadmap
 
 - [x] **v2** — loop train/test, 11 configs agrupadas, comparativas por grupo, config final.
-- [ ] **v2.1 — Multi-semilla.** Repetir entrenos con varias semillas, agregar banda
-  entre semillas a las curvas, re-interpretar y definir nueva config final robusta.
+- [~] **v2.1 — Multi-semilla.** Código listo (`--seeds`, `aggregate_seed_histories`,
+  `plot_*_multiseed`, `<cfg>_multiseed.json`). Pendiente: correr con varias semillas,
+  re-interpretar las curvas con banda entre semillas y definir la config final robusta.
   (Verifica si el pozo de la base ~ep.7000 es propio de seed=0 o sistemático.)
 - [ ] **Init de tabla Q / más episodios.** Inicialización optimista; extender
   `pos_100` con `--resume` para confirmar que converge.

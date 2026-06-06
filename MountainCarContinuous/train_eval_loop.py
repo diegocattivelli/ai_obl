@@ -212,3 +212,46 @@ def _write_csv(path, history):
         w.writerow(cols)
         for h in history:
             w.writerow([h.get(c) for c in cols])
+
+
+# ----------------------------------------------------------------------------- #
+# v2.1 — Agregación multi-semilla
+# ----------------------------------------------------------------------------- #
+def aggregate_seed_histories(histories):
+    """Combina los historiales de varias semillas en uno agregado.
+
+    `histories` es una lista de historiales (uno por semilla); cada historial es
+    la lista de checkpoints que devuelve run_train_eval. Se asume que todas las
+    semillas tienen los mismos checkpoints (mismos `trained_episodes`).
+
+    En cada checkpoint, la banda pasa a representar la **variabilidad ENTRE
+    semillas**: mean/std/min/max se calculan sobre la media de test de cada
+    semilla. Se conservan los valores por semilla (`seed_means`, `seed_success`)
+    para poder dibujar cada curva individual.
+    """
+    if not histories:
+        return []
+    n_checks = min(len(h) for h in histories)
+    agg = []
+    for i in range(n_checks):
+        means = [h[i]["mean"] for h in histories]
+        succ = [h[i]["success_rate"] for h in histories]
+        steps = [h[i].get("mean_steps", float("nan")) for h in histories]
+        rec = {
+            "trained_episodes": histories[0][i]["trained_episodes"],
+            "seed_means": [float(m) for m in means],
+            "seed_success": [float(s) for s in succ],
+            "mean": float(np.mean(means)),
+            "std": float(np.std(means)),
+            "min": float(np.min(means)),
+            "max": float(np.max(means)),
+            "p25": float(np.percentile(means, 25)),
+            "p50": float(np.percentile(means, 50)),
+            "p75": float(np.percentile(means, 75)),
+            "success_rate": float(np.mean(succ)),   # alias para reutilizar plots/CSV
+            "success_std": float(np.std(succ)),
+            "mean_steps": float(np.mean(steps)),
+            "n_seeds": len(histories),
+        }
+        agg.append(rec)
+    return agg

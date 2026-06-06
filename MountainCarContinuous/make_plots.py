@@ -1,8 +1,10 @@
 """Genera las gráficas comparativas POR GRUPO de decisión a partir de los
-historiales ya guardados (checkpoints/<config>_history.json).
+historiales ya guardados.
 
-No depende de gymnasium, así que puede correrse sin entrenar, para regenerar
-figuras cuando ya existen los historiales:
+Para cada config se usa, si existe, el historial **multi-semilla**
+(`<config>_multiseed.json`, banda entre semillas); si no, el de una sola corrida
+(`<config>_history.json`). No depende de gymnasium, así que regenera figuras sin
+reentrenar:
 
     python make_plots.py                 # todos los grupos con historial disponible
     python make_plots.py --band minmax   # cambiar el tipo de banda
@@ -21,11 +23,16 @@ from configs import GROUPS, configs_in_group
 
 
 def load_history(outdir, name):
-    path = os.path.join(outdir, f"{name}_history.json")
-    if not os.path.exists(path):
-        return None
-    with open(path) as f:
-        return json.load(f)["history"]
+    """Devuelve (history, is_multiseed). Prefiere el json multi-semilla."""
+    ms = os.path.join(outdir, f"{name}_multiseed.json")
+    if os.path.exists(ms):
+        with open(ms) as f:
+            return json.load(f)["history"], True
+    single = os.path.join(outdir, f"{name}_history.json")
+    if os.path.exists(single):
+        with open(single) as f:
+            return json.load(f)["history"], False
+    return None, False
 
 
 def make_group_plots(outdir="checkpoints", band="std"):
@@ -34,27 +41,27 @@ def make_group_plots(outdir="checkpoints", band="std"):
     generadas = []
 
     for group_key, title in GROUPS.items():
-        items = []
+        items, any_multiseed = [], False
         for cfg in configs_in_group(group_key):
-            hist = load_history(outdir, cfg["name"])
+            hist, is_ms = load_history(outdir, cfg["name"])
             if hist:
-                label = cfg["name"]
-                if "base" in cfg["name"]:
-                    label += " (ganadora)"
+                label = cfg["name"] + (" (ganadora)" if "base" in cfg["name"] else "")
                 items.append((label, hist))
+                any_multiseed = any_multiseed or is_ms
 
         if len(items) < 2:
             print(f"[saltado] {group_key}: faltan historiales ({len(items)} disponibles)")
             continue
 
         fig, ax = plt.subplots(figsize=(10, 6))
-        plotting.plot_comparison(items, band=band, ax=ax,
-                                 title=f"Decisión: {title}")
+        plotting.plot_comparison(items, band=band, ax=ax, title=f"Decisión: {title}")
+        if any_multiseed:
+            ax.set_ylabel(ax.get_ylabel() + " (media entre semillas)")
         out = os.path.join(figs_dir, f"grupo_{group_key}.png")
         fig.savefig(out, dpi=120, bbox_inches="tight")
         plt.close(fig)
         generadas.append(out)
-        print("Guardado:", out)
+        print("Guardado:", out, "(multi-semilla)" if any_multiseed else "")
 
     return generadas
 
