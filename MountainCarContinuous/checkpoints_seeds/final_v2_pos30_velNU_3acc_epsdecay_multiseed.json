@@ -1,0 +1,275 @@
+{
+  "config_name": "final_v2_pos30_velNU_3acc_epsdecay",
+  "history": [
+    {
+      "trained_episodes": 0,
+      "seed_means": [
+        -99.89999999999856,
+        -99.89999999999856,
+        -99.89999999999856
+      ],
+      "seed_success": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean": -99.89999999999856,
+      "std": 0.0,
+      "min": -99.89999999999856,
+      "max": -99.89999999999856,
+      "p25": -99.89999999999856,
+      "p50": -99.89999999999856,
+      "p75": -99.89999999999856,
+      "success_rate": 0.0,
+      "success_std": 0.0,
+      "mean_steps": 999.0,
+      "n_seeds": 3
+    },
+    {
+      "trained_episodes": 1000,
+      "seed_means": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "seed_success": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "success_rate": 0.0,
+      "success_std": 0.0,
+      "mean_steps": 999.0,
+      "n_seeds": 3
+    },
+    {
+      "trained_episodes": 2000,
+      "seed_means": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "seed_success": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "success_rate": 0.0,
+      "success_std": 0.0,
+      "mean_steps": 999.0,
+      "n_seeds": 3
+    },
+    {
+      "trained_episodes": 3000,
+      "seed_means": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "seed_success": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "success_rate": 0.0,
+      "success_std": 0.0,
+      "mean_steps": 999.0,
+      "n_seeds": 3
+    },
+    {
+      "trained_episodes": 4000,
+      "seed_means": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "seed_success": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "success_rate": 0.0,
+      "success_std": 0.0,
+      "mean_steps": 999.0,
+      "n_seeds": 3
+    },
+    {
+      "trained_episodes": 5000,
+      "seed_means": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "seed_success": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "success_rate": 0.0,
+      "success_std": 0.0,
+      "mean_steps": 999.0,
+      "n_seeds": 3
+    },
+    {
+      "trained_episodes": 6000,
+      "seed_means": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "seed_success": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "success_rate": 0.0,
+      "success_std": 0.0,
+      "mean_steps": 999.0,
+      "n_seeds": 3
+    },
+    {
+      "trained_episodes": 7000,
+      "seed_means": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "seed_success": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "success_rate": 0.0,
+      "success_std": 0.0,
+      "mean_steps": 999.0,
+      "n_seeds": 3
+    },
+    {
+      "trained_episodes": 8000,
+      "seed_means": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "seed_success": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "success_rate": 0.0,
+      "success_std": 0.0,
+      "mean_steps": 999.0,
+      "n_seeds": 3
+    },
+    {
+      "trained_episodes": 9000,
+      "seed_means": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "seed_success": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "success_rate": 0.0,
+      "success_std": 0.0,
+      "mean_steps": 999.0,
+      "n_seeds": 3
+    },
+    {
+      "trained_episodes": 10000,
+      "seed_means": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "seed_success": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "success_rate": 0.0,
+      "success_std": 0.0,
+      "mean_steps": 999.0,
+      "n_seeds": 3
+    }
+  ],
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "multiseed": true
+}
