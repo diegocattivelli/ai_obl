@@ -216,3 +216,21 @@ def plot_multiseed_report(result, outdir=None, show=True):
     if show:
         plt.show()
     return fig
+
+
+def plot_comparison_multiseed(results, ax=None, title="Comparación extendida (multi-semilla)",
+                              show_seeds=False):
+    """Superpone varias configs agregadas entre semillas en un mismo eje.
+    `results`: lista de dicts {config_name, history(agregado)} o tuplas (nombre, history)."""
+    if ax is None:
+        _, ax = plt.subplots(figsize=(11, 6))
+    for r in results:
+        if isinstance(r, dict):
+            name, hist = r.get("config_name"), r["history"]
+        else:
+            name, hist = r
+        plot_learning_curve_multiseed(hist, label=name, ax=ax, show_seeds=show_seeds)
+    ax.set_title(title)
+    ax.set_ylabel("Recompensa de test (media entre semillas)")
+    ax.legend()
+    return ax
