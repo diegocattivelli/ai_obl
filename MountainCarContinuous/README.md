@@ -55,6 +55,39 @@ Aprende a los ~2000 episodios y se mantiene estable al 100% de éxito.
 > óptimos de cada eje por separado no necesariamente se combinan. Ambas configs se
 > conservan en `configs.py` (`build_final_config_naive` y `build_final_config`).
 
+## v2.1 — Robustez (multi-semilla) y desempate (entrenamiento extendido)
+
+Se reentrenó cada config con **3 semillas** (0,1,2); las curvas pasan a mostrar la
+**banda ENTRE semillas** (qué tanto cambia el resultado según el azar). Hallazgos:
+
+- Las conclusiones por eje **se sostienen** entre semillas (γ=0.9 no aprende en las
+  3; vel no uniforme > uniforme; acciones 5 y pos 10 frágiles; α=0.2 se degrada; etc.).
+- El pozo de la base a ~7000 episodios era **en buena parte cosa de seed 0**:
+  promediando 3 semillas la base termina robusta. La multi-semilla **matiza** la v2.
+- `base`, `pos_30`, `epsilon_decay` y `final_slow` **convergen a un desempeño
+  equivalente** (~93, 100% éxito); las diferencias estaban dentro del ruido de semilla.
+
+Para desempatar se hizo un **entrenamiento extendido** (`--duel`, hasta 20 000
+episodios) de `base` vs `final_slow` vs `pos_100`, con su gráfica aparte
+(`checkpoints_duel/figs/duel_extendido.png`). No hay un único ganador: es un
+**frente de Pareto** entre tres ejes.
+
+| Config | Velocidad de aprendizaje | Estabilidad a largo plazo | Costo (tamaño tabla) |
+|---|---|---|---|
+| base (pos20, ε fijo) | rápida (~2000) | la peor (bandazo ancho a ~19k) | la más barata (~1200 estados) |
+| **final_slow (pos30, decay)** | **rápida (~2000)** | **buena** | media (~1800) |
+| pos_100 (ε fijo) | lenta (~7000) | la mejor (banda finísima) | la más cara (~5800) |
+
+**Modelo final declarado: `final_v2_pos30_velNU_3acc_epsdecay_slow`** — no por ser
+"la más estable" (ese título es de pos_100, que paga 3,5× más episodios y 5× más
+tabla), sino por ser el **mejor compromiso**: aprende rápido, es estable y tiene
+costo razonable. La estabilidad asintótica superior de pos_100 y el bandazo tardío
+de la base (ε fijo nunca deja de perturbar; tabla gruesa amplifica los bandazos) se
+documentan como parte del análisis.
+
+> Caveat: con 3 semillas los pozos tardíos son en parte eventos de una sola semilla
+> (la banda se abre, no caen las 3). El desempate es sugerente, no definitivo.
+
 ## Archivos
 
 | Archivo | Rol |
@@ -80,8 +113,13 @@ poetry run python make_plots.py                      # regenerar comparativas po
 poetry run python run_experiments.py --resume checkpoints/<config>_ep10000.pkl --cycles 5
 
 # v2.1 — multi-semilla (banda entre semillas):
-poetry run python run_experiments.py --seeds 0,1,2               # todas, 3 semillas
-poetry run python run_experiments.py --group gamma --seeds 0,1,2 # un grupo, 3 semillas
+poetry run python run_experiments.py --seeds 0,1,2 --outdir checkpoints_v21      # todas, 3 semillas
+poetry run python run_experiments.py --group gamma --seeds 0,1,2 --outdir checkpoints_v21
+
+# v2.1 — duelo / entrenamiento extendido (desempate por estabilidad asintótica):
+poetry run python run_experiments.py \
+  --duel base_posU20_velNU_3acc,final_v2_pos30_velNU_3acc_epsdecay_slow,pos_uniforme_100 \
+  --seeds 0,1,2 --resume-dir checkpoints_v21 --add-cycles 10 --outdir checkpoints_duel
 ```
 
 Salidas en `checkpoints/`: `<config>_ep<N>.pkl`, `<config>_metrics.csv`,
@@ -98,25 +136,25 @@ Salidas en `checkpoints/`: `<config>_ep<N>.pkl`, `<config>_metrics.csv`,
 - **Éxito** = el episodio termina en la meta (`terminated`), no por límite de pasos.
 - La recompensa de **train** se ve baja porque se entrena con ε-greedy (mucha
   exploración); el rendimiento real se mide aparte en modo greedy (test).
-- Entrenamiento con `seed=0` (única semilla por ahora — ver v2.1).
+- Entrenamiento reproducible con `seed` fijo. La v2 usó seed=0; la **v2.1**
+  promedia 3 semillas (0,1,2) y muestra la banda entre semillas.
 
 ---
 
 ## Roadmap
 
 - [x] **v2** — loop train/test, 11 configs agrupadas, comparativas por grupo, config final.
-- [~] **v2.1 — Multi-semilla.** Código listo (`--seeds`, `aggregate_seed_histories`,
-  `plot_*_multiseed`, `<cfg>_multiseed.json`). Pendiente: correr con varias semillas,
-  re-interpretar las curvas con banda entre semillas y definir la config final robusta.
-  (Verifica si el pozo de la base ~ep.7000 es propio de seed=0 o sistemático.)
-- [ ] **Init de tabla Q / más episodios.** Inicialización optimista; extender
-  `pos_100` con `--resume` para confirmar que converge.
+- [x] **v2.1 — Multi-semilla + desempate.** 3 semillas con banda entre semillas;
+  conclusiones por eje robustas; final declarado `final_slow` por mejor compromiso
+  (Pareto vs base y pos_100). "Más episodios" cubierto por el duelo (hasta 20k).
+- [ ] **Init de tabla Q (optimista).** Único pendiente menor antes de Dyna-Q; opcional.
 - [ ] **Dyna-Q** (obligatorio, punto 4). Reusa este harness sobre la versión final
   del Q-learning normal; variar nº de pasos de planning (0, 5, 50) como grupo.
 
 ## Punto de retorno (para retomar)
 
-Si volvés a este commit: la v2 está completa y reproducible. Para seguir,
-arrancá por v2.1 (multi-semilla) — el agente ya acepta `seed`; falta orquestar
-varias corridas y promediar/bandear en `plotting.py`. El ejercicio 2 (MATE /
-Isolation) ya está hecho aparte.
+Si volvés a este commit: v2 y v2.1 están completas y reproducibles (multi-semilla
++ duelo extendido), con `final_slow` declarado como modelo final. Lo que queda:
+inicialización optimista de la tabla Q (opcional) y **Dyna-Q** (obligatorio,
+punto 4), que reusa este mismo harness sobre la versión final. El ejercicio 2
+(MATE / Isolation) ya está hecho aparte.
