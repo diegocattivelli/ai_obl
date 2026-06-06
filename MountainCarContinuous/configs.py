@@ -13,6 +13,10 @@ Ejes de decisión (grupos):
   - epsilon       : fijo 0.9(base) vs decay  -> exploración
 
 La config "base" pertenece a TODOS los grupos: es el pivote de comparación.
+
+Además se definen DOS configs finales (groups=[]) que combinan los hallazgos:
+  - build_final_config_naive(): pos30 + decay rápido -> NO aprende (documentado).
+  - build_final_config(): pos30 + decay lento -> versión final corregida.
 """
 
 import numpy as np
@@ -128,7 +132,49 @@ def build_configs():
     cfgs.append(dict(name="epsilon_decay_0.9995", groups=["epsilon"],
         x_space=uniform_pos(20), vel_space=vel_nu, actions=make_actions(3), hyper=h))
 
+    # ---- CONFIGS FINALES v2 (groups=[] -> fuera de las comparativas) ----- #
+    cfgs.append(build_final_config_naive())  # documentado: NO aprende (interacción)
+    cfgs.append(build_final_config())        # corregido: decay más lento
+
     return cfgs
+
+
+def build_final_config_naive():
+    """Intento NAIVE de combinar pos30 + decay (resultado documentado).
+
+    NO APRENDE: la tabla más grande (pos 30) necesita más exploración, pero el
+    decay rápido (0.9995, ε_min 0.05) la recorta antes de descubrir la meta.
+    Se conserva como resultado negativo: muestra que los óptimos de cada eje por
+    separado no necesariamente se combinan (interacción posición × exploración).
+    """
+    return dict(
+        name="final_v2_pos30_velNU_3acc_epsdecay",
+        groups=[],
+        x_space=uniform_pos(30),
+        vel_space=nonuniform_vel(),
+        actions=make_actions(3),
+        hyper=dict(alpha=0.1, gamma=0.999,
+                   epsilon=1.0, epsilon_decay=0.9995, epsilon_min=0.05),
+    )
+
+
+def build_final_config():
+    """Configuración final CORREGIDA de la v2.
+
+    pos30 + velocidad no uniforme + 3 acciones + alpha 0.1 + gamma 0.999 +
+    epsilon con decay LENTO (0.9998, ε_min 0.1). El decay más lento mantiene
+    exploración suficiente para llenar la tabla más grande, evitando el fallo
+    del intento naive.
+    """
+    return dict(
+        name="final_v2_pos30_velNU_3acc_epsdecay_slow",
+        groups=[],
+        x_space=uniform_pos(30),
+        vel_space=nonuniform_vel(),
+        actions=make_actions(3),
+        hyper=dict(alpha=0.1, gamma=0.999,
+                   epsilon=1.0, epsilon_decay=0.9998, epsilon_min=0.1),
+    )
 
 
 def configs_in_group(group_key, cfgs=None):
