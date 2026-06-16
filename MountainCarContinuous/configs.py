@@ -43,6 +43,29 @@ def nonuniform_vel():
     ])
 
 
+def nonuniform_pos():
+    """Bins de posición concentrados en la zona que el auto realmente recorre:
+    el valle (~-0.5, donde arranca y cambia de dirección) y la subida hacia la
+    meta (~0.45). El extremo izquierdo (-1.2) casi nunca se visita, así que se le
+    dan pocos bins. ~20 bordes en total, para ser comparable con uniform_pos(20)."""
+    return np.concatenate([
+        np.linspace(-1.2, -0.6, 3),       # extremo izquierdo: pocos bins
+        np.linspace(-0.6, 0.3, 13)[1:],   # valle / zona activa: densa
+        np.linspace(0.3, 0.6, 6)[1:],     # subida a la meta: densa
+    ])
+
+
+def nonuniform_pos_left():
+    """Variante que concentra los bins en la IZQUIERDA (la colina por la que el
+    auto sube para juntar impulso) y deja pocos hacia la meta. Es la hipótesis
+    corregida: si robarle resolución a la izquierda fue lo que hizo perder a
+    `nonuniform_pos`, dársela debería ayudar. ~20 bordes, comparable a uniform_pos(20)."""
+    return np.concatenate([
+        np.linspace(-1.2, -0.3, 14)[:-1],  # izquierda + valle: densa (13 bordes)
+        np.linspace(-0.3, 0.6, 7),         # derecha hacia la meta: rala (7 bordes)
+    ])
+
+
 def make_get_state(x_space, vel_space):
     """Fabrica get_state a partir de los bordes de discretización."""
     def get_state(obs):
@@ -62,6 +85,7 @@ def make_actions(n=3):
 # --------------------------------------------------------------------------- #
 GROUPS = {
     "posicion_bins":  "Cantidad de bins de posición",
+    "posicion_disc":  "Discretización de la posición (uniforme vs no uniforme)",
     "velocidad_disc": "Discretización de la velocidad (uniforme vs no uniforme)",
     "acciones":       "Cantidad de acciones discretas",
     "gamma":          "Factor de descuento gamma",
@@ -84,7 +108,7 @@ def build_configs():
     # ---- BASE (ganadora) — pivote de TODOS los grupos -------------------- #
     cfgs.append(dict(
         name="base_posU20_velNU_3acc",
-        groups=["posicion_bins", "velocidad_disc", "acciones",
+        groups=["posicion_bins", "posicion_disc", "velocidad_disc", "acciones",
                 "gamma", "alpha", "epsilon"],
         x_space=uniform_pos(20), vel_space=vel_nu, actions=make_actions(3),
         hyper=dict(base_hyper),
@@ -101,7 +125,18 @@ def build_configs():
         x_space=uniform_pos(100), vel_space=vel_nu, actions=make_actions(3),
         hyper=dict(base_hyper)))  # demasiados bins -> tabla muy esparsa (lento)
 
-    # ---- GRUPO: discretización de velocidad ------------------------------ #
+    # ---- GRUPO: discretización de posición (forma: unif vs no unif) ------ #
+    # La base (pos uniforme 20) es la referencia uniforme; acá la contraparte
+    # no uniforme (mismos ~20 bins, concentrados en el valle y cerca de la meta).
+    cfgs.append(dict(name="pos_nouniforme", groups=["posicion_disc"],
+        x_space=nonuniform_pos(), vel_space=vel_nu, actions=make_actions(3),
+        hyper=dict(base_hyper)))
+    # concentrada en la izquierda (hipótesis corregida: más bins en la colina de impulso)
+    cfgs.append(dict(name="pos_nouniforme_izq", groups=["posicion_disc"],
+        x_space=nonuniform_pos_left(), vel_space=vel_nu, actions=make_actions(3),
+        hyper=dict(base_hyper)))
+
+    # ---- GRUPO: discretización de velocidad (forma: unif vs no unif) ----- #
     cfgs.append(dict(name="vel_uniforme_20", groups=["velocidad_disc"],
         x_space=uniform_pos(20), vel_space=uniform_vel(20), actions=make_actions(3),
         hyper=dict(base_hyper)))
@@ -131,6 +166,34 @@ def build_configs():
     h = dict(base_hyper); h["epsilon"] = 1.0; h["epsilon_decay"] = 0.9995; h["epsilon_min"] = 0.05
     cfgs.append(dict(name="epsilon_decay_0.9995", groups=["epsilon"],
         x_space=uniform_pos(20), vel_space=vel_nu, actions=make_actions(3), hyper=h))
+    # epsilon con decay LENTO (cambio de un solo factor sobre la base: solo epsilon)
+    h = dict(base_hyper); h["epsilon"] = 1.0; h["epsilon_decay"] = 0.9998; h["epsilon_min"] = 0.1
+    cfgs.append(dict(name="epsilon_decay_slow", groups=["epsilon"],
+        x_space=uniform_pos(20), vel_space=vel_nu, actions=make_actions(3), hyper=h))
+
+    # ---- COMBINACIONES PARA VALIDACIÓN (groups=[] -> fuera de las comparativas) ----
+    # No son OFAT: combinan ganadores para construir/estresar la config final.
+    h_slow = dict(alpha=0.1, gamma=0.999, epsilon=1.0, epsilon_decay=0.9998, epsilon_min=0.1)
+    # (1) candidata a final: posición no uniforme izquierda + decay lento
+    #     (los dos ingredientes de aprendizaje rápido temprano -> ¿se suman?)
+    cfgs.append(dict(name="pos_nouniforme_izq_epsdecay_slow", groups=[],
+        x_space=nonuniform_pos_left(), vel_space=vel_nu, actions=make_actions(3),
+        hyper=dict(h_slow)))
+    # (2) confirmación de mecanismo: tabla grande (pos100) + decay lento
+    #     (si el 100 era lento por falta de visitas, más exploración debería acelerarlo)
+    cfgs.append(dict(name="pos100_epsdecay_slow", groups=[],
+        x_space=uniform_pos(100), vel_space=vel_nu, actions=make_actions(3),
+        hyper=dict(h_slow)))
+
+    # Versiones con decay RÁPIDO (0.9995): es el decay que en el OFAT empató con la
+    # base (el lento se degradaba al final), así que es el correcto para combinar.
+    h_fast = dict(alpha=0.1, gamma=0.999, epsilon=1.0, epsilon_decay=0.9995, epsilon_min=0.05)
+    cfgs.append(dict(name="pos_nouniforme_izq_epsdecay_fast", groups=[],
+        x_space=nonuniform_pos_left(), vel_space=vel_nu, actions=make_actions(3),
+        hyper=dict(h_fast)))
+    cfgs.append(dict(name="pos100_epsdecay_fast", groups=[],
+        x_space=uniform_pos(100), vel_space=vel_nu, actions=make_actions(3),
+        hyper=dict(h_fast)))
 
     # ---- CONFIGS FINALES v2 (groups=[] -> fuera de las comparativas) ----- #
     cfgs.append(build_final_config_naive())  # documentado: NO aprende (interacción)
